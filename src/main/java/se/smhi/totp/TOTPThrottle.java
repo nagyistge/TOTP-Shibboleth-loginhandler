@@ -198,24 +198,14 @@ public class TOTPThrottle {
 
     // Look into our map and se if user should be allow to attempt to login or not
     public static boolean validateUsername(final String username) {
-
         // Return true if username is not bruteforcing
-        if (validateMap(username, usernames)) {
-            return true;
-        }
-
-        return false;
+        return validateMap(username, usernames);
     }
 
     // Look into our map and se if ip should be allow to attempt to login or not
     public static boolean validateIPAddress(final String ip) {
-
         // Return true if ip is not bruteforcing
-        if (validateMap(ip, IPAddresses)) {
-            return true;
-        }
-
-        return false;
+        return validateMap(ip, IPAddresses);
     }
 
     // User passed a loginattempt so we clear the user from our maps
