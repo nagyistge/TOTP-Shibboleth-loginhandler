@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+
+       default-init-method="initialize"
+       default-destroy-method="destroy">
+
+    <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer"
+        p:placeholderPrefix="%{" p:placeholderSuffix="}" />
+
+    <bean class="net.shibboleth.idp.profile.impl.ProfileActionBeanPostProcessor" />
+    <bean class="net.shibboleth.ext.spring.config.IdentifiableBeanPostProcessor" />
+
+    <import resource="../../../conf/authn/totp-authn-config.xml" />
+
+    <!--
+         Victor Näslund <victor.naslund@smhi.se>
+
+         Copy of password-authn-beans.xml
+         With some TOTP modifications
+         TODO: Add the shibboleth-idp 3.2.1 changes
+    -->
+
+    <!--
+     <bean id="ExtractUsernamePasswordFromBasicAuth"
+         class="net.shibboleth.idp.authn.impl.ExtractUsernamePasswordFromBasicAuth" scope="prototype"
+         p:httpServletRequest-ref="shibboleth.HttpServletRequest"
+         p:lowercase-ref="shibboleth.authn.Password.Lowercase"
+         p:uppercase-ref="shibboleth.authn.Password.Uppercase"
+         p:trim-ref="shibboleth.authn.Password.Trim"
+         p:transforms-ref="shibboleth.authn.Password.Transforms" />
+    -->
+
+    <bean id="SetRPUIInformation"
+            class="net.shibboleth.idp.ui.impl.SetRPUIInformation" scope="prototype"
+            p:httpServletRequest-ref="shibboleth.HttpServletRequest">
+        <property name="fallbackLanguages">
+            <bean parent="shibboleth.CommaDelimStringArray" c:_0="%{idp.ui.fallbackLanguages:}" />
+        </property>
+    </bean>
+
+    <bean id="ExtractUsernamePasswordTOTPFromFormRequest"
+        class="se.smhi.totp.ExtractUsernamePasswordTOTPFromFormRequest" scope="prototype"
+        p:httpServletRequest-ref="shibboleth.HttpServletRequest"
+        p:TOTPCodeFieldName-ref="se.smhi.totp.TOTPCodeFieldName"
+        p:usernameFieldName-ref="se.smhi.totp.UsernameFieldName"
+        p:passwordFieldName-ref="se.smhi.totp.PasswordFieldName"
+        p:SSOBypassFieldName-ref="se.smhi.totp.SSOBypassFieldName"
+        p:lowercase-ref="shibboleth.authn.Password.Lowercase"
+        p:uppercase-ref="shibboleth.authn.Password.Uppercase"
+        p:trim-ref="shibboleth.authn.Password.Trim"
+        p:transforms-ref="shibboleth.authn.Password.Transforms" />
+
+    <bean id="ValidateUsernamePasswordAgainstJAAS"
+            class="net.shibboleth.idp.authn.impl.ValidateUsernamePasswordAgainstJAAS" scope="prototype"
+            p:loginConfigNames-ref="shibboleth.authn.JAAS.LoginConfigNames" p:loginConfigType="JavaLoginConfig"
+            p:classifiedMessages-ref="shibboleth.authn.Password.ClassifiedMessageMap"
+            p:resultCachingPredicate="#{getObject('shibboleth.authn.Password.resultCachingPredicate')}">
+        <property name="loginConfigParameters">
+            <bean class="java.security.URIParameter">
+                <constructor-arg ref="shibboleth.authn.JAAS.JAASConfigURI" />
+            </bean>
+        </property>
+    </bean>
+
+    <bean id="ValidateUsernamePasswordAgainstKerberos"
+            class="net.shibboleth.idp.authn.impl.ValidateUsernamePasswordAgainstKerberos" scope="prototype"
+            p:refreshKrb5Config-ref="shibboleth.authn.Krb5.RefreshConfig"
+            p:preserveTicket-ref="shibboleth.authn.Krb5.PreserveTicket"
+            p:classifiedMessages-ref="shibboleth.authn.Password.ClassifiedMessageMap"
+            p:resultCachingPredicate="#{getObject('shibboleth.authn.Password.resultCachingPredicate')}">
+    </bean>
+
+
+    <!-- Parent beans for custom ldaptive CredentialConfig types. -->
+    <bean id="shibboleth.X509ResourceCredentialConfig"
+        class="net.shibboleth.idp.authn.impl.X509ResourceCredentialConfig" abstract="true" /> 
+    <bean id="shibboleth.KeystoreResourceCredentialConfig"
+        class="net.shibboleth.idp.authn.impl.KeystoreResourceCredentialConfig" abstract="true" /> 
+
+    <bean id="ValidateUsernamePasswordTOTPAgainstLDAP"
+        class="se.smhi.totp.ValidateUsernamePasswordTOTPAgainstLDAP" scope="prototype"
+        p:authenticator-ref="shibboleth.authn.LDAP.authenticator"
+        p:classifiedMessages-ref="se.smhi.totp.ClassifiedMessageMap"
+        p:resultCachingPredicate="#{getObject('shibboleth.authn.Password.resultCachingPredicate')}"
+        p:returnAttributes-ref="shibboleth.authn.LDAP.returnAttributes" />
+
+  </beans>
