@@ -147,7 +147,7 @@ public class TOTPTest {
         System.out.println("THe LDAP multivalue attribute with serial and all should be like this:\n");
         System.out.println("Secret0: " + encryptedSecret);
         System.out.println("Salt0: " + aesobj.getSalt());
-        System.out.println("IV0: " + aesobj.getIV());
+        System.out.println("Iv0: " + aesobj.getIV());
         System.out.println("");
     }
 }
